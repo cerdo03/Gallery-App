@@ -1,15 +1,15 @@
 package com.example.gallery
 
 import android.content.Context
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.gallery.model.image
 
 
-class ItemAdapter(private val context: Context, val dataset: List<image>, val listener: ImageItemClicked):RecyclerView.Adapter<ItemAdapter.ItemViewHolder>(){
+class ItemAdapter(private val context: Context, val dataset: List<Uri>, val listener: ImageItemClicked):RecyclerView.Adapter<ItemAdapter.ItemViewHolder>(){
     class ItemViewHolder(private val view: View):RecyclerView.ViewHolder(view){
         val imageView: ImageView = view.findViewById(R.id.image_view)
     }
@@ -24,7 +24,7 @@ class ItemAdapter(private val context: Context, val dataset: List<image>, val li
 
     override fun onBindViewHolder(holder: ItemAdapter.ItemViewHolder, position: Int) {
         val item = dataset[position]
-        holder.imageView.setImageResource(item.imageResourceId)
+        holder.imageView.setImageURI(item)
         holder.imageView.setOnClickListener{
             listener.onItemClicked(dataset[position])
         }
@@ -36,5 +36,5 @@ class ItemAdapter(private val context: Context, val dataset: List<image>, val li
 
  }
 interface ImageItemClicked{
-    fun onItemClicked(item:image)
+    fun onItemClicked(item: Uri)
 }

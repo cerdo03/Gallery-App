@@ -1,31 +1,41 @@
 package com.example.gallery
 
-import android.R.attr
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.gallery.model.image
-import android.R.attr.button
-import android.media.ExifInterface
+import android.content.ContentUris
+import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Environment
-import android.util.Log
 import android.view.View
-import java.io.File
-import android.database.Cursor
+import androidx.core.app.ActivityCompat
 
 
 class MainActivity : AppCompatActivity(),ImageItemClicked{
+    val imageURIS: MutableList<Uri> = mutableListOf()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val dataset = Datasource().returnImages()
+
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)!=PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this,
+                Array(1) { Manifest.permission.READ_EXTERNAL_STORAGE },
+                121
+            )
+
+        }
+
+        loadImages()
+
+
+        val dataset = imageURIS
         GridLayoutManager(
             this, // context
             3, // span count
@@ -43,6 +53,7 @@ class MainActivity : AppCompatActivity(),ImageItemClicked{
                 val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
                 try {
                     startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+
                 } catch (e: ActivityNotFoundException) {
                     // display error state to the user
                 }
@@ -50,16 +61,50 @@ class MainActivity : AppCompatActivity(),ImageItemClicked{
         })
     }
 
-    override fun onItemClicked(item: image){
+    private fun loadImages() {
+        val projection = listOf<String>(MediaStore.Images.Media._ID).toTypedArray()
+        val selection = null
+        val selectionArgs = null
+        val sortOrder = null
+
+        applicationContext.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            sortOrder
+        )?.use { cursor ->
+            while (cursor?.moveToNext()) {
+                val id=cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                val image_uri=
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,id)
+                imageURIS.add(image_uri)
+                if(cursor.isLast){
+                    break
+                }
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode:Int,permissions: Array<out String>,grantResults: IntArray){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if(requestCode==121 && grantResults[0]==PackageManager.PERMISSION_GRANTED){
+
+        }
+    }
+
+
+
+    override fun onItemClicked(item: Uri){
 
         val img = item
         callActivity(img)
     }
-    fun callActivity(img:image){
+    fun callActivity(img:Uri){
 
         val intent = Intent(this,DisplayImage::class.java)
         intent.putExtra(
-            DisplayImage.Image_Extra, img.imageResourceId.toString()
+            DisplayImage.Image_Extra, img.toString()
         )
         startActivity(intent)
     }

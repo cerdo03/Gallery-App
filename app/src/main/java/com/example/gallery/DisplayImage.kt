@@ -1,5 +1,6 @@
 package com.example.gallery
 
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Contacts
@@ -18,7 +19,7 @@ class DisplayImage : AppCompatActivity() {
         setContentView(R.layout.activity_display_image)
         val cur = intent.getStringExtra(Image_Extra)
         if (cur != null) {
-            full_image_view.setImageResource(cur.toInt())
+            full_image_view.setImageURI(Uri.parse(cur))
         }
 
 
